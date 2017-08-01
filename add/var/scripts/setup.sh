@@ -83,6 +83,9 @@ sed -i.bak -E "s!('url' => )'http://solder\.app:8000'!\1'$repoUrl'!" app/config/
 # Hack for php7.1 not liking mcrypt
 sed -i.bak -E "2s/\s?/error_reporting(E_ALL ^ E_DEPRECATED);/" app/config/app.php
 
+chmod -R 777 ./app/storage
+chmod -R 777 /var/www/technicsolder/public
+
 echo "Running php artisan migrate:install"
 # Setup the database data
 php artisan migrate:install
