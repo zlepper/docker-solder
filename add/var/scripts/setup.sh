@@ -56,7 +56,15 @@ fi
 # Start postgres as a background service
 gosu postgres postgres &
 
-#
+mkdir /var/www/technicsolder/app/storage/meta \
+      /var/www/technicsolder/app/storage/views \
+      /var/www/technicsolder/app/storage/sessions \
+      /var/www/technicsolder/app/storage/resources \
+      /var/www/technicsolder/app/storage/logs \
+      /var/www/technicsolder/app/storage/github-api-cache \
+      /var/www/technicsolder/app/storage/debugbar \
+      /var/www/technicsolder/app/storage/cache
+
 repoUrl="http://$REPO_HOST/"
 echo "$repoUrl" 
 ### Solder setup
