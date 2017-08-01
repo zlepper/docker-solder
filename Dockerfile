@@ -55,6 +55,8 @@ VOLUME /var/lib/postgresql/data \
 # Copy setup scripts
 ADD add/ /
 
+RUN chmod +x /var/scripts/setup.sh
+
 # Make sure the outside can see solder
 EXPOSE \
     # Solder over http
