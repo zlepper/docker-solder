@@ -12,6 +12,9 @@ This command starts your solder container for you. You only need to change the e
 ```sh
 docker run -d --name=solder \
     -p 80:80 -p 8080:8080 \
+    -v /data/docker/solder/database:/var/lib/postgresql/data \
+    -v /data/docker/solder/repo:/var/www/repo.solder \
+    -v /data/docker/solder/storage:/var/www/technicsolder/app/storage \
     -e "SOLDER_HOST=solder.example.com" \
     -e "REPO_HOST=repo.example.com" \
     -e "REPO_USER=zlepper" \
