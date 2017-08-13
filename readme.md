@@ -44,6 +44,7 @@ All of these volumes should be added to the host, this will ensure a smooth upda
 |`/var/lib/postgresql/data`|All the database data|
 |`/var/www/repo.solder`|Storage location for uploaded mod files|
 |`/var/www/technicsolder/app/storage`|Various specific solder files|
+|`/var/www/technicsolder/public/storage`|Various specific solder files|
 
 ## Ports
 |Port number|Description|Recommendation|
