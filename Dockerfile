@@ -29,6 +29,10 @@ RUN apk --no-cache add postgresql nginx ca-certificates wget curl \
     chmod -R 777 /var/www/technicsolder/public && \
     cd /
 
+    # Add gpm for easier file upload
+RUN curl -o /usr/local/bin/gpm -sSL "https://github.com/zlepper/gpm/releases/download/1.0.1/gpm-1.0.1-linux-x64" && \
+    chmod +x /usr/local/bin/gpm 
+
     # Add gfs for easier file upload
 RUN curl -o /usr/local/bin/gfs -sSL "https://github.com/zlepper/gfs/releases/download/0.0.4/gfs-linux-x64" && \
     chmod +x /usr/local/bin/gfs 
@@ -58,7 +62,8 @@ VOLUME /var/lib/postgresql/data \
 # Copy setup scripts
 ADD add/ /
 
-RUN chmod +x /var/scripts/setup.sh
+RUN chmod +x /var/scripts/setup.sh && \
+    chmod +x /var/scripts/setup-postgres.sh
 
 # Make sure the outside can see solder
 EXPOSE \
@@ -73,4 +78,5 @@ EXPOSE \
 
 
 # Actually configure solder
-ENTRYPOINT ["/var/scripts/setup.sh"]
+ENTRYPOINT ["/usr/local/bin/gpm"]
+CMD ["-config", "/var/gpm-config.json"]

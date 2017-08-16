@@ -1,0 +1,19 @@
+version: '2'
+services:
+  solder:
+    image: zlepper/solder
+    container_name: solder
+    restart: unless-stopped
+    volumes:
+      - /data/docker/solder/database:/var/lib/postgresql/data
+      - /data/docker/solder/repo:/var/www/repo.solder
+      - /data/docker/solder/storage:/var/www/technicsolder/app/storage
+    environment:
+      - SOLDER_HOST=solder.example.com
+      - REPO_HOST=repo.example.com
+      - REPO_USER=username
+      - REPO_PASSWORD=password
+    ports:
+      - "80:80"
+      - "8080:8080"
+      

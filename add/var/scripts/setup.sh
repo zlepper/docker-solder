@@ -1,60 +1,15 @@
 #!/bin/sh
 
-# Postgres setup
-mkdir -p "$PGDATA"
-chmod 700 "$PGDATA"
-chown -R postgres "$PGDATA" 
-mkdir /run/postgresql
-chmod 700 /run/postgresql/
-chown -R postgres /run/postgresql/
+echo "Waiting for postgres to start"
+sleepTime=5s
+until gosu postgres pg_isready 2>/dev/null; do
+  >&2 echo "Postgres is unavailable - sleeping for $sleepTime"
+  sleep $sleepTime
+done
+echo "Postgres started"
 
-if [ -z "$(ls -A "$PGDATA")" ]; then
-    gosu postgres initdb
-    sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1'*'/" "$PGDATA"/postgresql.conf
-
-    : ${POSTGRES_USER:="postgres"}
-    : ${POSTGRES_DB:=$POSTGRES_USER}
-
-    if [ "$POSTGRES_PASSWORD" ]; then
-      pass="PASSWORD '$POSTGRES_PASSWORD'"
-      authMethod=md5
-    else
-      echo "==============================="
-      echo "!!! Use \$POSTGRES_PASSWORD env var to secure your database !!!"
-      echo "==============================="
-      pass=
-      authMethod=trust
-    fi
-    echo
-
-
-    if [ "$POSTGRES_DB" != 'postgres' ]; then
-      createSql="CREATE DATABASE $POSTGRES_DB;"
-      echo $createSql | gosu postgres postgres --single -jE
-      echo
-    fi
-
-    if [ "$POSTGRES_USER" != 'postgres' ]; then
-      op=CREATE
-    else
-      op=ALTER
-    fi
-
-    userSql="$op USER $POSTGRES_USER WITH SUPERUSER $pass;"
-    echo $userSql | gosu postgres postgres --single -jE
-    echo
-
-    # internal start of server in order to allow set-up using psql-client
-    # does not listen on TCP/IP and waits until start finishes
-    gosu postgres pg_ctl -D "$PGDATA" -o "-c listen_addresses=''" -w start
-
-    gosu postgres pg_ctl -D "$PGDATA" -m fast -w stop
-
-    { echo; echo "host all all 0.0.0.0/0 $authMethod"; } >> "$PGDATA"/pg_hba.conf
-fi
-
-# Start postgres as a background service
-gosu postgres postgres &
+: ${POSTGRES_USER:="postgres"}
+: ${POSTGRES_DB:=$POSTGRES_USER}
 
 mkdir /var/www/technicsolder/app/storage/meta \
       /var/www/technicsolder/app/storage/views \
@@ -82,6 +37,9 @@ sed -i.bak -E "s!('mirror_url' => )''!\1'$REPO_HOST'!" app/config/solder.php
 sed -i.bak -E "s!('url' => )'http://solder\.app:8000'!\1'$repoUrl'!" app/config/app.php
 # Hack for php7.1 not liking mcrypt
 sed -i.bak -E "2s/\s?/error_reporting(E_ALL ^ E_DEPRECATED);/" app/config/app.php
+# enable debug mode by default
+sed -i.bak "s|'debug' => false|'debug' => true|g" /var/www/technicsolder/app/config/app.php
+
 
 chmod -R 777 ./app/storage
 chmod -R 777 /var/www/technicsolder/public
@@ -115,9 +73,3 @@ sed -i.bak -E "s!ENV_REPO_HOST!$REPO_HOST!g" /etc/nginx/conf.d/repo.conf
 
 ## Setup GFS
 gfs -persist -username "$REPO_USER" -password "$REPO_PASSWORD" -serve /var/www/repo.solder
-# Run gfs
-gfs &
-
-# Start webserver
-echo "Starting nginx"
-nginx
